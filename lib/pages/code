@@ -1,0 +1,125 @@
+import 'package:cropix/components/trackfield.dart';
+import 'package:cropix/firebase/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart'; // Import fl_chart for charting
+
+class Track extends StatefulWidget {
+  const Track({super.key});
+
+  @override
+  State<Track> createState() => _TrackState();
+}
+
+class _TrackState extends State<Track> {
+
+  // providers
+  late final listeningprovider = Provider.of<FirebaseProvider>(context);
+  late final firebaseprovider = Provider.of<FirebaseProvider>(context, listen: false);
+
+  // text controllers
+  final typeofinsectcontroller = TextEditingController();
+  final typeofinsecticidecontroller = TextEditingController();
+  final amountcontroller = TextEditingController();
+  final datecontroller = TextEditingController();
+
+  // trackfield
+  void trackfield() {
+    showDialog(
+      context: context,
+      builder: (context) => TrackField(
+        typeofInsect: typeofinsectcontroller,
+        typeofInsecticide: typeofinsecticidecontroller,
+        amount: amountcontroller,
+        onPressed: () async {
+          await createTrack(typeofinsectcontroller.text, typeofinsecticidecontroller.text, amountcontroller.text);
+        },
+        onPressedText: 'Track',
+      ),
+    );
+  }
+
+  // user create a post
+  Future<void> createTrack(String typeofinsect, String typeofinsecticide, String amount) async {
+    await firebaseprovider.createTract(typeofinsect, typeofinsecticide, amount);
+  }
+
+  // Sample data for the Line Chart
+  List<FlSpot> chartData = [
+    FlSpot(0, 1),
+    FlSpot(1, 1.5),
+    FlSpot(2, 2),
+    FlSpot(3, 1.8),
+    FlSpot(4, 2.2),
+    FlSpot(5, 2.5),
+    FlSpot(6, 2.8),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Track',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3D550C),
+          ),
+        ),
+        backgroundColor: Colors.grey[100],
+      ),
+      // Floating action + button
+      floatingActionButton: FloatingActionButton(
+        onPressed: trackfield,
+        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF3D550C),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title or label for chart
+            Text(
+              'Insecticide Tracking Over Time',
+              style: GoogleFonts.dmSerifText(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF3D550C),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Line chart
+            SizedBox(
+              height: 300,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(show: true),
+                  titlesData: FlTitlesData(show: true),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(
+                      color: const Color(0xFF3D550C),
+                      width: 1,
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: chartData,
+                      isCurved: true,
+                      color:  Color(0xFF3D550C),
+                      belowBarData: BarAreaData(show: true),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
